@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >-->
+<suite name="Suite" parallel="false">
+    <test name="test">
+        <classes>
+<!--            <class name = "com.example.action.DataManipulation">-->
+<!--                <methed>-->
+<!--                    <include name="start"/>-->
+<!--                </methed>-->
+<!--            </class>-->
+            <class name = "com.example.action.MyAssert">
+<!--                <methed>-->
+<!--                    <include name="assertIt"/>-->
+<!--                </methed>-->
+            </class>
+
+        </classes>
+
+    </test>
+    <listeners>
+        <lostemer class-name="com.example.amisbook002.ExtentTestNGIReporterListener"/>
+    </listeners>
+
+</suite> <!-- Suite -->
