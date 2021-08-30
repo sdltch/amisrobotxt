@@ -26,9 +26,16 @@ public class Excel {
         //System.out.println("===========os.namesxcel:"+mySystems);
         if(mySystems.contains("Windows")){
             //windows
+            //System.out.println("===========os.namesxcel:"+mySystems);
+            //获取当前路径2种方式
+            File directory = new File("");
+            String canonicalPath = directory.getCanonicalPath();
+            //String canonicalPath=directory.getAbsolutePath();
+            System.out.println("获取读取文件路径===========os.canonicalPath:"+canonicalPath);
             //paths = "D:\\testdata\\github\\amisroboyxt\\amisrobot\\excel\\amirobot.xls";
-            paths = "D:\\testdata\\github\\amisroboyxt\\amisrobot\\excel\\amirobotclound.xls";
-            paths = "D:\\testdata\\github\\amisroboyxt\\amisrobot\\excel\\amirobotclound.xls";
+            //paths = "D:\\testdata\\github\\amisroboyxt\\amisrobot\\excel\\amirobotclound.xls";
+            //paths = "D:\\testdata\\gitami\\amisrobotxt\\amisrobotxt\\amisrobot\\excel\\amirobotclound.xls";
+            paths =canonicalPath+"\\amisrobot\\excel\\amirobotclound.xls";
             System.out.println("当前在excel1:"+mySystems+" 系统操作");
         }else if(mySystems.contains("Linux")){
             //linux路径

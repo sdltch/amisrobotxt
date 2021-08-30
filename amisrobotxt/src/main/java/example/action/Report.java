@@ -1,6 +1,5 @@
 package example.action;
 
-
 import java.io.*;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -54,31 +53,36 @@ public class Report {
         String mySystem = System.getProperties().getProperty("os.name");
         System.out.println("===========os.name:"+mySystem);
         if(mySystem.contains("Windows")){
+            //生成html名称
             reportFileName = "reportamirobot.html";
             myreport = "\\report\\";
-            ROOT_DIR = "D:\\testdata\\gitami\\amiwfw\\amisroboyxt\\amisrobot";
-            //ROOT_DIR = "D:\\testdata\\github\\amisroboyxt\\amisrobot";
+            //获取当前路径
+            File directory = new File("");
+            String canonicalPath=directory.getAbsolutePath();
+            System.out.println("获取读取文件路径===========os.canonicalPath:"+canonicalPath);
+            //ROOT_DIR = "D:\\testdata\\gitami\\amiwfw\\amisroboyxt\\amisrobot";
+            ROOT_DIR = canonicalPath+"\\amisrobot";
 //            System.getProperty("user.dir"):当前路径
 //            ROOT_DIR = System.getProperty("user.dir")+"\\amirobt";
             System.out.println("当前路径:"+ROOT_DIR+" 系统操作");
             System.out.println("当前在121:"+mySystem+" 系统操作");
             //源文件路径
-            File startFile=new File("D:\\testdata\\gitami\\amiwfw\\amisroboyxt\\amisrobot\\report\\reportamirobot.html");
-            //File startFile=new File("D:\\testdata\\github\\amisroboyxt\\amisrobot\\report\\reportamirobot.html");
+            File startFile=new File(ROOT_DIR+"\\report\\reportamirobot.html");
+            //File startFile=new File("D:\\testdata\\gitami\\amiwfw\\amisroboyxt\\amisrobot\\report\\reportamirobot.html");
             //目的目录路径
-            File endDirection=new File("D:\\testdata\\gitami\\amiwfw\\amisroboyxt\\amisrobot\\report\\reporthistory");
-            //File endDirection=new File("D:\\testdata\\github\\amisroboyxt\\amisrobot\\report\\reporthistory");
+            File endDirection=new File(ROOT_DIR+"\\report\\reporthistory");
+            //File endDirection=new File("D:\\testdata\\gitami\\amiwfw\\amisroboyxt\\amisrobot\\report\\reporthistory");
 
             //如果目的目录路径不存在，则进行创建
-                if(!endDirection.exists()) {
-                    endDirection.mkdirs();
-                }
+            if(!endDirection.exists()) {
+                endDirection.mkdirs();
+            }
             //String ss = startFile.getName();
-           //目的文件路径=目的目录路径+源文件名称
+            //目的文件路径=目的目录路径+源文件名称
             File endFile=new File(endDirection+ File.separator+startFile.getName());
-            //System.out.println("目的地文件路径："+endDirection+ File.separator+startFile.getName());
+            System.out.println("目的地文件路径1："+endDirection+ File.separator+startFile.getName());
             try {
-	            //调用File类的核心方法renameTo
+                //调用File类的核心方法renameTo
                 if (startFile.renameTo(endFile)) {
                     System.out.println("文件移动成功！目标路径：{"+endFile.getAbsolutePath()+"}");
                 } else {
@@ -89,7 +93,8 @@ public class Report {
             }
             System.out.println("!!!!!!!!!!!用户的当前工作目录:"+System.getProperty("user.dir"));
             //改名
-            String copyone = "D:\\testdata\\gitami\\amiwfw\\amisroboyxt\\amisrobot\\report\\reporthistory\\reportamirobot.html";
+            String copyone = ROOT_DIR+"\\report\\reporthistory\\reportamirobot.html";
+            //String copyone = "D:\\testdata\\gitami\\amiwfw\\amisroboyxt\\amisrobot\\report\\reporthistory\\reportamirobot.html";
             //String copyone = "D:\\testdata\\github\\amisroboyxt\\amisrobot\\report\\reporthistory\\reportamirobot.html";
             File fileone = new File(copyone);
             //获取当前时间
@@ -99,11 +104,11 @@ public class Report {
             String copytwo = endDirection + File.separator + datetimes + fileone.getName();
             //System.out.println("文件重命名后路径："+copytwo);
             File filetwo = new File(copytwo);
-                if (fileone.renameTo(filetwo)) {
-                    System.out.println("重命名成功！");
-                } else {
-                    System.out.println("重命名失败！");
-                }
+            if (fileone.renameTo(filetwo)) {
+                System.out.println("重命名成功！");
+            } else {
+                System.out.println("重命名失败！");
+            }
         }else if(mySystem.contains("Linux")){
             reportFileName = "linuxreportamirobot.html";
             myreport = "/linuxreport/";
@@ -167,7 +172,7 @@ public class Report {
         String s, tagBegin, tagEnd;
         tagBegin = "<HEAD language=\"java\" pageEncoding=\"UTF-8\" charset='utf-8'>" + "\n";
         //<%@ page language="java" pageEncoding="UTF-8"%>
-                tagEnd = "</HEAD>" + "\n";
+        tagEnd = "</HEAD>" + "\n";
         s = tagBegin + strTag + tagEnd;
         return s;
     }
@@ -378,7 +383,7 @@ public class Report {
 //     */
     //记录结果
     public static void recordResult(Object[] caseID, boolean pass, String strDescrip,
-                  String myurl,String testcase) throws UnsupportedEncodingException {
+                                    String myurl,String testcase) throws UnsupportedEncodingException {
         File reportTmp = getReportTmp();
         if(strDescrip.length()>1024){
             strDescrip = strDescrip.substring(0,1024);
@@ -453,7 +458,7 @@ public class Report {
         totalCase = passedCase + failedCase;
     }
 
-//    //    /**
+    //    //    /**
 //     * Generate a HTML runtime report
 //     *
 //     * @param int caseNum - The actual number of TA test cases which are needed to run
@@ -469,7 +474,7 @@ public class Report {
         String title = tagTitle("MEAutomation Report");
         String resultTable, statisticTable, body, head, record;
         caseStatus = "Finished";
-        
+
 
         resultTable = insertResultTable();
         statisticTable = insertStatisticTable(totalCase, startTime, endTime);
