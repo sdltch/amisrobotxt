@@ -3,7 +3,9 @@ package example.start;
 
 import example.action.DataManipulation;
 import example.action.Report;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@SpringBootApplication
 public class MainStart {
     public static void main(String[] args) throws Exception {
         String startTime = Report.getCurrentTime();

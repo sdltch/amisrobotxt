@@ -267,10 +267,10 @@ public class Report {
                     break;
             }
             strArray[i] = tagFont(strArray[i], "white", 4, "Arial");
-            strArray[i] = tagTd(strArray[i], "center", "navy", width);
+            strArray[i] = tagTd(strArray[i], "center", "navy", width);//"navy"
         }
         title = tagTr(strArray[0] + strArray[1] + strArray[2] + strArray[3]
-                + strArray[4] + strArray[5], "navy");
+                + strArray[4] + strArray[5], "navy");//"navy"
         //System.out.println("title1 == ="+title);
         try {
             // Read all the records to a StringBuffer object from report temp file
@@ -328,8 +328,10 @@ public class Report {
             }
             if (i == 6) {
                 color = "red";
-//            }else if(i == 5){
-//                color = "lime";
+            }else if(i == 5){
+                color = "#00BB00";//绿色
+            }else if(i == 3){
+                color = "#000079";//
             } else {
                 color = "black";
             }
@@ -402,7 +404,8 @@ public class Report {
 
         if (pass) {
             result = "Pass";
-            colorResult = "black";
+            //colorResult = "black";
+            colorResult = "#00BB00";//绿色
             bgColor = "white";
             passedCase++;
         } else {

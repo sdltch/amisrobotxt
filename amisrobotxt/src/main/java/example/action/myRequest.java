@@ -1,13 +1,24 @@
 package example.action;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import javafx.beans.binding.StringExpression;
+import jdk.nashorn.internal.runtime.arrays.ArrayLikeIterator;
+import oracle.jrockit.jfr.VMJFR;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.log4j.Logger;
 import org.apache.http.*;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.*;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.HttpClientConnectionManager;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.HttpMultipartMode;
@@ -15,17 +26,22 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
+import java.security.cert.X509Certificate;
 import java.util.*;
 
 public class myRequest {
-    HashMap<String, String> myjsonmap = new HashMap<String, String>();
+    Logger logger = Logger.getLogger(myRequest.class);
     public String Authorization = null;
     public String Authorizations = "Authorization";
     public myRequest() {
@@ -38,6 +54,7 @@ public class myRequest {
         String loginHead = DataManipulation.longinhead;
         String myresponse = DataManipulation.myresponse;
         String loginfile = DataManipulation.loginfile;
+        String loginAssert = DataManipulation.loginAssert;
         System.out.println("登录dataLL："+ postData);
         System.out.println("登录dataid："+ DataManipulation.loginId);
         HttpResponse httpResponse = doPost(loginUrl, loginYype, postData, loginHead);
@@ -54,9 +71,13 @@ public class myRequest {
 //        }else {
 //            System.out.println("登录系统失败");
 //        }
-        if (body.contains("操作成功")){
+        if(loginAssert.contains("=")){
+            String[] split = loginAssert.split("=");
+            loginAssert = split[1];
+        }
+        if (body.contains(loginAssert)){
             String datas = jsonObjectone.getString("data");
-            System.out.println("登录响应2："+datas);
+            System.out.println("登录响应data："+datas);
             JSONObject jsonObjectones = JSONObject.parseObject(datas);
             String tokens = jsonObjectones.getString("token");
             String tokenHeads = jsonObjectones.getString("tokenHead");
@@ -86,7 +107,8 @@ public class myRequest {
             httpGet.setConfig(requestConfig);
             // 准备请求头 （这一步看需要，若接口有添加请求头信息则直接添加，若不需要 可直接略过）
             HttpRequest httpRequest = httpGet;
-            myxtgethead(myhead,httpRequest);
+            RequsetHeader requsetHeader = new RequsetHeader();
+            requsetHeader.myxthead(myhead,httpRequest,Authorization,Authorizations);
             //httpRequest.addHeader("Basic YW1paW50ZWxsZWN0OmFtaWludGVsbGVjdC0xMjM0NTY=", "xxxxx1");
             //httpRequest.addHeader("token2", "xxxxx2");
 
@@ -113,7 +135,9 @@ public class myRequest {
         try {
             HttpPost httpPost = new HttpPost(url);
             //判断请求头并给请求头附值
-            myxtposthead(myhead,httpPost);
+            HttpRequest httpRequest = httpPost;
+            RequsetHeader requsetHeader = new RequsetHeader();
+            requsetHeader.myxthead(myhead,httpRequest,Authorization,Authorizations);
             if ("POSTFORM".equals(posttype)) {
                 httpPost.addHeader(new BasicHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8"));
                 String params = jointBodyParam(data);
@@ -154,9 +178,11 @@ public class myRequest {
         try {
             HttpPost httpPost = new HttpPost(url);
             File file =null;
+            HttpRequest httpRequest = httpPost;
             //设置请求头
             //判断请求头并给请求头附值
-            myxtposthead(myhead,httpPost);
+            RequsetHeader requsetHeader = new RequsetHeader();
+            requsetHeader.myxthead(myhead,httpRequest,Authorization,Authorizations);
             httpPost.setHeader("Content-Type","multipart/form-data; boundary="+boundary);
             //httpPost.setHeader("Authorization","Basic YW1paW50ZWxsZWN0OmFtaWludGVsbGVjdC0xMjM0NTY=");
             //HttpEntity builder
@@ -249,83 +275,8 @@ public class myRequest {
     }
 
     /**
-     * 暂未使用该方法表单：application/x-www-form-urlencoded
-     * @param url
-     * @param posttype
-     * @param data
-     * @param myhead
-     * @return
-     */
-    public HttpResponse doPostfrom(String url,String posttype,String data,String myhead){
-        //String url ="http://synergy.k8s.superlucy.net/api/auth/oauth/token";
-        HttpResponse httpresponse = null;
-        try {
-            HttpPost httpPost = new HttpPost(url);
-            //判断请求头并给请求头附值
-            myxtposthead(myhead,httpPost);
-//            httpPost.addHeader(new BasicHeader("Content-Type", "application/json;charset=UTF-8"));
-            httpPost.addHeader(new BasicHeader("Accept","application/json, text/plain, */*"));
-//            httpPost.addHeader(new BasicHeader("Authorization","Basic c3VwZXJsdWN5X3N5bmVyZ3k6c3luZXJneS0xcWF6LTJ3c3g="));
-            httpPost.addHeader(new BasicHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8"));
-            List<NameValuePair> list = new ArrayList<>();
-            JSONObject jsonObject = JSONObject.parseObject(data);
-            for(String str:jsonObject.keySet()){
-                System.out.println(str + ":" +jsonObject.get(str));
-                list.add(new BasicNameValuePair(str,jsonObject.get(str).toString()));
-            }
-
-//            String params = jointBodyParam(data);
-//            System.out.println("转化后params:"+params);
-
-            //将数设置到 NameValuePair
-            UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(list, Consts.UTF_8);
-            httpPost.setEntity(formEntity);
-            CloseableHttpResponse responses = null;
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            responses = httpClient.execute(httpPost);
-            //设置超时
-            RequestConfig requestConfig = RequestTime();
-            httpPost.setConfig(requestConfig);
-            httpresponse = new HttpResponse(responses);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return httpresponse;
-    }
-    public HttpResponse doPostfroms(String url){
-        HttpResponse httpresponse = null;
-        try {
-            HttpPost httpPost = new HttpPost(url);
-            //判断请求头并给请求头附值
-//            myxtposthead(myhead,httpPost);
-            httpPost.addHeader(new BasicHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8"));
-//            String params = jointBodyParam(data);
-//            System.out.println("转化后params:"+params);
-
-            List<NameValuePair> list = new ArrayList<>();
-            list.add(new BasicNameValuePair("username","0215测试001"));
-            list.add(new BasicNameValuePair("username","0215测试001"));
-            //将参数设置到 NameValuePair
-            UrlEncodedFormEntity formEntity = new UrlEncodedFormEntity(list, Consts.UTF_8);
-            httpPost.setEntity(formEntity);
-
-            CloseableHttpResponse responses = null;
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            responses = httpClient.execute(httpPost);
-            //设置超时
-            RequestConfig requestConfig = RequestTime();
-            httpPost.setConfig(requestConfig);
-            httpresponse = new HttpResponse(responses);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return httpresponse;
-    }
-
-
-    /**
-     *
-     * @param jsonStr post请求from入参时将json格式入参拼接
+     * post请求from入参时将json格式入参拼接
+     * @param jsonStr
      * @return
      */
     public static String jointBodyParam(String jsonStr) {
@@ -345,110 +296,171 @@ public class myRequest {
     }
 
     /**
-     *
+     *  put请求
+     * @param url
+     * @param posttype
+     * @param data
      * @param myhead
-     * @param httpRequest
      * @return
-     * 处理get请求头
      */
-    public void myxtgethead(String myhead, HttpRequest httpRequest) {
+    public HttpResponse doPut(String url,String posttype,String data,String myhead) {
+        HttpResponse httpresponse = null;
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpPut httpPut = new HttpPut(url);
+        //设置超时
+        RequestConfig requestConfig = RequestTime();
+        httpPut.setConfig(requestConfig);
+        HttpRequest httpRequest = httpPut;
         //判断请求头并给请求头附值
-        if(("").equals(myhead)||myhead==null){
-            System.out.println("该请求头为空时，get默认："+myhead);
-            System.out.println("该请求头为空时，get默认："+this.Authorization);
-            httpRequest.addHeader(new BasicHeader(this.Authorizations, this.Authorization));
-        }else if(myhead.equals("NO")){
-            System.out.println("该请求头不处理："+myhead);
-        }else{
-            System.out.println("myhead不为空");
-            if(myhead.contains("@")){
-                System.out.println("该请求头有@符号："+myhead);
-                String[] splitone = myhead.split("@");
-                for(int i=0;i<splitone.length;i++){
-                    if(splitone[i].contains(":")){
-                        System.out.println("该请求头有：符号："+myhead);
-                        String[] splittwo = splitone[i].split(":");
-                        httpRequest.addHeader(splittwo[0], splittwo[1]);
-                    }else {
-                        System.out.println("该请求头格式不符合要求："+splitone[i]);
-                    }
-                }
-            }else{
-                System.out.println("该请求头没有@符号："+myhead);
-                if(myhead.contains(":")){
-                    System.out.println("该请求头有：符号："+myhead);
-                    String[] splittwo = myhead.split(":");
-                    httpRequest.addHeader(new BasicHeader(splittwo[0], splittwo[1]));
-                }else{
-                    System.out.println("该请求头格式不符合要求："+myhead);
-                }
-            }
+        RequsetHeader requsetHeader = new RequsetHeader();
+        requsetHeader.myxthead(myhead,httpRequest,Authorization,Authorizations);
+        if ("PUTJSON".equals(posttype)) {
+            httpPut.addHeader(new BasicHeader("Content-Type", "application/json;charset=UTF-8"));
+            httpPut.setEntity(new StringEntity(data, "UTF-8"));
+        }else if("PUTFROM".equals(posttype)) {
+            httpPut.addHeader(new BasicHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8"));
+            String params = jointBodyParam(data);
+            System.out.println("转化后params:"+params);
+            httpPut.setEntity(new StringEntity(params, "UTF-8"));
+        }else {
+            System.out.println("当前不支持该请求方法：" + posttype);
         }
+        CloseableHttpResponse httpResponse = null;
+        try {
+            httpPut.setEntity(new StringEntity(data));
+            CloseableHttpResponse execute = httpClient.execute(httpPut);
+            httpresponse = new HttpResponse(execute);
+            return httpresponse;
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**
-     *
-     * @param myhead
-     * @param httpPost
+     * delete请求 json
+     * @param myurl
+     * @param data
+     * @param xmyhead
      * @return
-     * 处理post请求头
      */
-    public void myxtposthead(String myhead,HttpPost httpPost) {
-        //判断请求头并给请求头附值
-        if(("").equals(myhead)||myhead==null){
-            System.out.println("该请求头为空时，post默认："+myhead);
-            System.out.println("登录后Authorization"+this.Authorization);
-            httpPost.addHeader(new BasicHeader(this.Authorizations, this.Authorization));
-        }else if(myhead.equals("NO")){
-            System.out.println("该请求头不处理："+myhead);
-        }else{
-            System.out.println("myhead不为空");
-            if(myhead.contains("@")){
-                System.out.println("该请求头有@符号："+myhead);
-                String[] splitone = myhead.split("@");
-                for(int i=0;i<splitone.length;i++){
-                    if(splitone[i].contains(":")){
-                        System.out.println("该请求头有：符号："+myhead);
-                        String[] splittwo = splitone[i].split(":");
-                        httpPost.addHeader(splittwo[0], splittwo[1]);
-                    }else {
-                        System.out.println("该请求头格式不符合要求："+splitone[i]);
-                    }
-                }
-            }else{
-                System.out.println("该请求头没有@符号："+myhead);
-                if(myhead.contains(":")){
-                    System.out.println("该请求头有：符号："+myhead);
-                    String[] splittwo = myhead.split(":");
-                    httpPost.addHeader(new BasicHeader(splittwo[0], splittwo[1]));
-                }else{
-                    System.out.println("该请求头格式不符合要求："+myhead);
-                }
+    public HttpResponse doDeletejson(String myurl,String data,String xmyhead){
+        HttpResponse httpresponse = null;
+        PutRequest putRequest = new PutRequest();
+        try {
+            // 创建httpDelete请求
+            if(!myurl.contains("$")){
+                HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(myurl);
+                //HttpDelete httpDelete = new HttpDelete(myurl);
+                CloseableHttpClient httpClient = HttpClients.createDefault();
+                //设置超时
+                RequestConfig requestConfig = RequestTime();
+                httpDelete.setConfig(requestConfig);
+                // 准备请求头 （这一步看需要，若接口有添加请求头信息则直接添加，若不需要 可直接略过）
+                HttpRequest httpRequest = httpDelete;
+                RequsetHeader requsetHeader = new RequsetHeader();
+                requsetHeader.myxthead(xmyhead,httpRequest,Authorization,Authorizations);
+                httpDelete.addHeader(new BasicHeader("Content-Type", "application/json;charset=UTF-8"));
+                httpDelete.setEntity(new StringEntity(data, "UTF-8"));
+                //设置请求参数json
+                StringEntity stringEntity = new StringEntity(data);
+                httpDelete.setEntity(stringEntity);
+                // 发送请求
+                CloseableHttpResponse httpResponses = httpClient.execute(httpDelete);
+                //收响应
+                httpresponse = new HttpResponse(httpResponses);
+                //httpClient.close();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        //判断请求头并给请求头附值
-//        if (!(("").equals(myhead) || myhead == null) && myhead.contains(":")) {
-//            System.out.println("myhead不为空且有：符号：" + myhead);
-//            if (myhead.contains("@")) {
-//                System.out.println("该请求头有@符号：" + myhead);
-//                String[] splitone = myhead.split("@");
-//                for (int i = 0; i < splitone.length; i++) {
-//                    if (splitone[i].contains(":")) {
-//                        System.out.println("该请求头有：符号：" + myhead);
-//                        String[] splittwo = splitone[i].split(":");
-//                        httpPost.addHeader(new BasicHeader(splittwo[0], splittwo[1]));
-//                    } else {
-//                        System.out.println("拆分后该请求头格式不符合要求：" + splitone[i]);
-//                    }
-//                }
-//            } else {
-//                System.out.println("该请求头没有@符号：" + myhead);
-//                String[] splittwo = myhead.split(":");
-//                httpPost.addHeader(new BasicHeader(splittwo[0], splittwo[1]));
-//            }
-//        } else {
-//            System.out.println("该请求头格式不符合要求：" + myhead);
-//        }
+        return httpresponse;
+    }
+
+    /**
+     *  Delete请求from
+     * @param myurl
+     * @param xmyhead
+     * @return
+     */
+    public HttpResponse doDeletefrom(String myurl,String xmyhead){
+        HttpResponse httpresponse = null;
+        PutRequest putRequest = new PutRequest();
+        try {
+            // 创建httpDelete请求
+            if(!myurl.contains("$")){
+                HttpDeleteWithBody httpDelete = new HttpDeleteWithBody(myurl);
+                //HttpDelete httpDelete = new HttpDelete(myurl);
+                CloseableHttpClient httpClient = HttpClients.createDefault();
+                //设置超时
+                RequestConfig requestConfig = RequestTime();
+                httpDelete.setConfig(requestConfig);
+                // 准备请求头 （这一步看需要，若接口有添加请求头信息则直接添加，若不需要 可直接略过）
+                HttpRequest httpRequest = httpDelete;
+                RequsetHeader requsetHeader = new RequsetHeader();
+                requsetHeader.myxthead(xmyhead,httpRequest,Authorization,Authorizations);
+                httpDelete.addHeader(new BasicHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8"));
+                // 发送请求
+                CloseableHttpResponse httpResponses = httpClient.execute(httpDelete);
+                //收响应
+                httpresponse = new HttpResponse(httpResponses);
+                //httpClient.close();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return httpresponse;
+    }
+
+    public String jsonDeleteRequest(final String url, final Map<String, Object> param) throws Exception {
+
+        //解决https请求证书的问题
+        SSLContextBuilder builder = new SSLContextBuilder();
+        builder.loadTrustMaterial(null, (X509Certificate[] x509Certificates, String s) -> true);
+        SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(builder.build(), new String[]{"SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.2"}, null, NoopHostnameVerifier.INSTANCE);
+        Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
+                .register("http", new PlainConnectionSocketFactory())
+                .register("https", socketFactory).build();
+        HttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager(registry);
+        CloseableHttpClient httpClient = HttpClients.custom().setConnectionManager(connManager).build();
+
+        String responseBody = null;
+        // 创建默认的httpClient实例.
+//		final CloseableHttpClient httpclient = HttpClients.createDefault();
+        try {
+            //以post方式请求网页
+            final HttpDeleteWithBody delete = new HttpDeleteWithBody(url);
+            //将参数转为JSON格式
+            final Gson gson = new Gson();
+            final String jsonParam = gson.toJson(param);
+
+            delete.setHeader("Content-Type", "application/json;charset=UTF-8");
+            delete.setHeader("accept","application/json");
+            //将POST参数以UTF-8编码并包装成表单实体对象
+            final StringEntity se = new StringEntity(jsonParam, "UTF-8");
+            se.setContentType("text/json");
+            delete.setEntity(se);
+            final CloseableHttpResponse response = httpClient.execute(delete);
+            try {
+                final HttpEntity entity = response.getEntity();
+                if (entity != null) {
+                    logger.info("准备获取返回结果");
+                    responseBody = EntityUtils.toString(entity, "UTF-8");
+                    logger.info("获取返回结果为：" + responseBody);
+                }
+            } finally {
+                response.close();
+            }
+            logger.info(responseBody);
+        }catch(Exception e){
+            logger.error("接口请求失败：url=" + url, e);
+        }finally {
+            // 当不再需要HttpClient实例时,关闭连接管理器以确保释放所有占用的系统资源
+            httpClient.getConnectionManager().shutdown();
+        }
+        return responseBody;
     }
 
     /**
@@ -462,41 +474,5 @@ public class myRequest {
         return  requestConfig;
     }
 
-    public static void main(String[] args) throws Exception {
-
-        //请求的url
-        String url ="https://xxx.xxx.com";
-        String myurl ="http://permission.synergy.c.superlucy.net/api/auth/oauth/token";
-        String myhead = "Authorization:Basic YW1paW50ZWxsZWN0OmFtaWludGVsbGVjdC0xMjM0NTY=";
-        //接口请求的数据，拼接成json字符串
-        String jsonStr ="{\"password\":\"sdl@123\",\"username\":\"sdltest\",\"grant_type\":\"password\"}";
-        //接口请求的类型：json，form
-        String submitType = "POSTFORM";
-        myRequest myRequest = new myRequest();
-    }
-
-
-    public static String doPut(String url, String token, String jsonStr) {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpPut httpPut = new HttpPut(url);
-        RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(35000).setConnectionRequestTimeout(35000).setSocketTimeout(60000).build();
-        httpPut.setConfig(requestConfig);
-        httpPut.setHeader("Content-type", "application/json");
-        httpPut.setHeader("DataEncoding", "UTF-8");
-        httpPut.setHeader("token", token);
-
-        CloseableHttpResponse httpResponse = null;
-        try {
-            httpPut.setEntity(new StringEntity(jsonStr));
-            httpResponse = httpClient.execute(httpPut);
-            HttpEntity entity = httpResponse.getEntity();
-            String result = EntityUtils.toString(entity);
-            return result;
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        return null;
-    }
 }
 

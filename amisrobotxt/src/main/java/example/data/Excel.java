@@ -35,7 +35,8 @@ public class Excel {
             //paths = "D:\\testdata\\github\\amisroboyxt\\amisrobot\\excel\\amirobot.xls";
             //paths = "D:\\testdata\\github\\amisroboyxt\\amisrobot\\excel\\amirobotclound.xls";
             //paths = "D:\\testdata\\gitami\\amisrobotxt\\amisrobotxt\\amisrobot\\excel\\amirobotclound.xls";
-            paths =canonicalPath+"\\amisrobot\\excel\\amirobotclound.xls";
+            paths =canonicalPath+"\\amisrobot\\excel\\amirobotjr.xls";
+            //paths =canonicalPath+"\\amisrobot\\excel\\amirobotclound.xls";
             System.out.println("当前在excel1:"+mySystems+" 系统操作");
         }else if(mySystems.contains("Linux")){
             //linux路径

@@ -1,5 +1,8 @@
 package example.action;
+import com.alibaba.fastjson.JSONObject;
 import example.data.Excel;
+import org.apache.http.entity.StringEntity;
+
 import java.util.HashMap;
 import java.util.List;
 
@@ -36,8 +39,8 @@ public class DataManipulation {
             String[] readexcelone = readExcels.get(1);
             myurlRpa = readexcelone[1];
             System.out.println("域名："+myurlRpa);
-            //取第五行登录数据
-            String[] readexcelfive = readExcels.get(4);
+            //取第四行登录数据
+            String[] readexcelfive = readExcels.get(3);
             loginId = readexcelfive[0];
             loginYype = readexcelfive[2];
             loginUrl = readexcelfive[3];
@@ -48,7 +51,7 @@ public class DataManipulation {
             myresponse = readexcelfive[8];
             longinhead = readexcelfive[10];
             //删除前第几行
-            int tag = 3;
+            int tag = 4;
             for(int i=0;i < tag; i++){
                 readExcels.remove(0);
             }
@@ -115,7 +118,6 @@ public class DataManipulation {
                     }else {
                         System.out.println("当前请求："+method+"没有入参");
                     }
-
 //                    //对登录接口的密码进行加密
 //                    if (line[1].equals("login")){
 //                        data = rsaType(data, method);
@@ -128,8 +130,10 @@ public class DataManipulation {
                         response = sss.doPost(url,method,data,xthead);
                     }else if(method.equals("POSTSEND")){
                         response = sss.doPostsend(url,method,data,refile,xthead);
+                    }else {
+                        System.out.println("暂不支持当前请求："+method);
                     }
-                    body = response.getBody();
+                    //body = response.getBody();
                 } else if (method.contains("GET")) {
                     System.out.println("当前请求sss："+method+"; url:"+url);
                     //判断是否存在入参   直接替换
@@ -156,26 +160,66 @@ public class DataManipulation {
 //                    }
                     System.out.println("当前请求："+method+"; url:"+url);
                     response = sss.doget(url,xthead);
-                    body = response.getBody();
-                } else if(method.equals("PUT")){
+                    //body = response.getBody();
+                } else if(method.contains("PUT")){
                     System.out.println("当前请求："+method);
                     //判断是否存在入参   直接替换
                     if(!(("").equals(data)||data==null)){
                         data = putRequest.myrequest(data,this.myjsonmap);
                     }
+                    if(method.equals("PUTJSON")){
+                        response = sss.doPut(url,method,data,xthead);
+                    }else if(method.equals("PUTFROM")){
+                        response = sss.doPut(url,method,data,xthead);
+                    }else{
+                        System.out.println("暂不支持当前请求："+method);
+                    }
+                    System.out.println("转化后data：" + response);
+                    //body = response.getBody();
                     System.out.println("转化后data：" + data);
-//                    response = ss.doput(url, data);
-//                    body = response.getBody();
-                } else if(method.equals("DELETE")){
-                    System.out.println("当前请求："+method);
+                } else if(method.contains("DELETE")){
+                    //判断是否存在入参   直接替换
+                    if (!(("").equals(data) || data == null)) {
+                        if ("DELETEJSON".equals(method)) {
+                            //设置请求参数josn
+//                      StringEntity stringEntity = new StringEntity(data);
+//                      httpDelete.setEntity(stringEntity);
+                            response = sss.doDeletejson(url,data,xthead);
+                        }else if("DELETEFROM".equals(method)) {
+                            data = putRequest.myrequest(data, this.myjsonmap);
+                            url = url + "?" + data;
+                            System.out.println("转化后DELETEurl:" + url);
+                            response = sss.doDeletefrom(url,xthead);
+                        }
+                    }else {
+                        response = sss.doDeletefrom(url,xthead);
+                    }
+
+                    //判断是否存在入参   直接替换
+//                    if(!(("").equals(data)||data==null)){
+//                        data = putRequest.myrequest(data,this.myjsonmap);
+//                        url = url+"?"+data;
+//                        System.out.println("转化后DELETEurl:"+url);
+//                    }
+
+                    System.out.println("当前请求："+xthead);
+                    //body = response.getBody();
+                    System.out.println("转化后data：" + data);
                 } else {
                     System.out.println("(系统暂时只支持get,post,sendpost,put,delete请求):当前请求：" + method);
                     break;
                 }
 //                System.out.println("response------"+response.toString());
+                body="null";
+                System.out.println("response："+response);
                 try {
-                    System.out.println(line[0]+"++++响应："+body);
-                    System.out.println(line[0]+"++++code："+response.getCode());
+                    if(!(("").equals(response)||response==null)){
+                        body = response.getBody();
+                        System.out.println(line[0]+"++++响应："+body);
+                        System.out.println(line[0]+"++++code："+response.getCode());
+                    }else {
+                        System.out.println("response------异常退出");
+                    }
                     //调用断言
 //                    body = new String(body.getBytes("gbk"),"utf-8");
 //                    noteCase = new String(noteCase.getBytes("gbk"),"utf-8");
@@ -193,6 +237,7 @@ public class DataManipulation {
                     }else{
                         System.out.println("接口断言失败");
                     }
+
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -200,146 +245,6 @@ public class DataManipulation {
             }
         }
     }
-//    public void mytest(ArrayList<String[]> readExcels){
-//        HttpResponse response = null;
-//        String body = "";
-//        //实例化对象
-//        myRequest sss = new myRequest();
-//        //String s = readExcels.get(0)[0];
-//        //循环取值
-//        for (String[] line : readExcels) {
-//            //编号
-//            String caseID = line[0];
-//            System.out.println("开始----------------------------------------------------------");
-//            System.out.println("编号："+line[0]);
-//            //方法
-//            String method = line[2];
-//            //地址
-//            String interfaceUrl = line[3];
-//            String url = myurlRpa + interfaceUrl;
-//            //String url = line[3];
-//            System.out.println("：url路径："+url);
-//            //参数
-//            String data = line[4];
-//            //断言
-//            String expected = line[5];
-//            //文件路径
-//            String refile = line[6];
-//            System.out.println("：文件路径："+refile);
-//            //根据给定的值，更改请求参数
-//            String myrequest = line[7];
-//            System.out.println("myrequest------"+myrequest);
-//            //根据给定的值，取响应值
-//            String myresponse = line[8];
-//            System.out.println("myresponse------"+myresponse);
-//            //备注
-//            String noteCase = line[9];
-//            //head
-//            String xthead = line[10];
-//            //获取响应值
-//            //Map<String, File> requestFiles = new HashMap<String, File>();
-//            //JosnConversionMap josnConversionMap = new JosnConversionMap();
-//            ImportResponse importResponse = new ImportResponse();
-//            PutRequest putRequest = new PutRequest();
-//            //根据method判定调用方法
-//            if (method.contains("POST")) {
-//                System.out.println("当前请求："+method);
-//                //判断是否存在入参
-//                if(!(("").equals(data)||data==null)){
-//                    //myrequest不等于空
-//                    if (!(("").equals(myrequest)||myrequest==null)) {
-//                        System.out.println("request不为空："+method);
-//                        data = putRequest.myrequest(data, myrequest, this.myjsonmap);
-////                        putRequest.myrequests(data,this.myjsonmap);
-//                        System.out.println("转化后data：" + data);
-//                        System.out.println("转化后url：" + url);
-////                        System.out.println("转化后方法：" + method);
-////                        System.out.println("转化后xthead：" + xthead);
-//                    }else{
-//                        System.out.println("当前请求："+method+";替换值为空不需要替换");
-//                    }
-//                }else {
-//                    System.out.println("当前请求："+method+"没有入参");
-//                }
-//
-////                    //对登录接口的密码进行加密
-////                    if (line[1].equals("login")){
-////                        data = rsaType(data, method);
-////                        System.out.println("加密data："+data);
-////                    }
-//
-//                if(method.equals("POSTJSON")){
-//                    response = sss.doPost(url,method,data,xthead);
-//                }else if(method.equals("POSTFORM")){
-//                    response = sss.doPost(url,method,data,xthead);
-//                }else if(method.equals("POSTSEND")){
-//                    response = sss.doPostsend(url,method,data,refile,xthead);
-//                }
-//                body = response.getBody();
-//            } else if (method.contains("GET")) {
-//                System.out.println("当前请求："+method+"; url:"+url);
-//                //判断是否存在入参
-//                if(!(("").equals(data)||data==null)){
-//                    //判断是否需要替换
-//                    System.out.println("当前get入参:"+data);
-//                    if(!(("").equals(myrequest)||myrequest==null)){
-//                        System.out.println("当前get入参:"+data+" ;需要替换");
-//                        data = getquest(data,myrequest);
-//                        if(!(("").equals(data)||data==null)){
-//                            url = url+"?"+data;
-//                            System.out.println("转化后geturl:"+url);
-//                        }
-//                    }else {
-//                        System.out.println("当前get入参不需要替换");
-//                    }
-//                }
-//                System.out.println("当前请求："+method+"; url:"+url);
-//                response = sss.doget(url,xthead);
-//                body = response.getBody();
-//            } else if(method.equals("PUT")){
-//                System.out.println("当前请求："+method);
-//                //myrequest不等于空
-//                if (!myrequest.equals("")) {
-//                    data = putRequest.myrequest(data, myrequest, this.myjsonmap);
-//                }
-//                System.out.println("转化后data：" + data);
-////                    response = ss.doput(url, data);
-////                    body = response.getBody();
-//            } else if(method.equals("DELETE")){
-//                System.out.println("当前请求："+method);
-//            } else {
-//                System.out.println("(系统暂时只支持get,post,sendpost,put,delete请求):当前请求：" + method);
-//                break;
-//            }
-//            System.out.println("response------"+response.toString());
-//            try {
-//                System.out.println(line[0]+"++++响应："+body);
-//                System.out.println(line[0]+"++++code："+response.getCode());
-//                //调用断言
-////                    body = new String(body.getBytes("gbk"),"utf-8");
-////                    noteCase = new String(noteCase.getBytes("gbk"),"utf-8");
-//                boolean assertIt = MyAssert.assertIt(caseID, body, expected, interfaceUrl, noteCase);
-//                //Assert.assertEquals();
-//                //获取响应字段，并放入map集合
-//                if(assertIt == true){
-//                    if(!(("").equals(myresponse)||myresponse==null)){
-//                        System.out.println("接口调用成功后，响应："+myresponse+"开始赋值------------------");
-//                        this.myjsonmap =importResponse.myresponse(body,myresponse,this.myjsonmap);
-//                        System.out.println("接口调用成功后，响应："+myresponse+"结束赋值------------------");
-//                    }else {
-//                        System.out.println("接口调用成功后，替换值response为空，不赋值------------------");
-//                    }
-//                }else{
-//                    System.out.println("接口调用失败");
-//                }
-//            } catch (Exception e) {
-//                // TODO Auto-generated catch block
-//                e.printStackTrace();
-//            }
-//        }
-//        System.out.println("结束==========================================================");
-//    }
-
     /**
      * 替换get入参
      * @param data  原始值
