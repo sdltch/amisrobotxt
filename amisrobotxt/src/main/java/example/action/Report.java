@@ -55,10 +55,12 @@ public class Report {
         String mySystem = System.getProperties().getProperty("os.name");
         System.out.println("===========os.name:"+mySystem);
         if(mySystem.contains("Windows")){
+            //获取文件名称
+            String fileNameone = Excel.fileName.substring(0,Excel.fileName.lastIndexOf("."));
             //生成html名称
             //reportFileName = "reportamirobot.html";
-            reportFileName = Excel.fileName+".html";
-            System.out.println("获取"+reportFileName);
+            reportFileName = fileNameone+".html";
+            System.out.println("生成html名称："+reportFileName);
             myreport = "\\report\\";
             //获取当前路径
             File directory = new File("");
@@ -71,7 +73,7 @@ public class Report {
             System.out.println("当前路径:"+ROOT_DIR+" 系统操作");
             System.out.println("当前在121:"+mySystem+" 系统操作");
             //源文件路径
-            File startFile=new File(ROOT_DIR+"\\report\\reportamirobot.html");
+            File startFile=new File(ROOT_DIR+"\\report\\"+reportFileName);
             //File startFile=new File("D:\\testdata\\gitami\\amiwfw\\amisroboyxt\\amisrobot\\report\\reportamirobot.html");
             //目的目录路径
             File endDirection=new File(ROOT_DIR+"\\report\\reporthistory");
@@ -97,7 +99,7 @@ public class Report {
             }
             System.out.println("!!!!!!!!!!!用户的当前工作目录:"+System.getProperty("user.dir"));
             //改名
-            String copyone = ROOT_DIR+"\\report\\reporthistory\\reportamirobot.html";
+            String copyone = ROOT_DIR+"\\report\\reporthistory\\"+reportFileName;
             //String copyone = "D:\\testdata\\gitami\\amiwfw\\amisroboyxt\\amisrobot\\report\\reporthistory\\reportamirobot.html";
             //String copyone = "D:\\testdata\\github\\amisroboyxt\\amisrobot\\report\\reporthistory\\reportamirobot.html";
             File fileone = new File(copyone);

@@ -18,7 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Excel {
-    public static String fileName= "";
+    //配置读取xls文件
+    public final static String fileName= "amirobotjr.xls";
 
     public static List<String[]> judgeExcel() throws Exception {
         String paths= null;
@@ -36,7 +37,7 @@ public class Excel {
             //paths = "D:\\testdata\\github\\amisroboyxt\\amisrobot\\excel\\amirobot.xls";
             //paths = "D:\\testdata\\github\\amisroboyxt\\amisrobot\\excel\\amirobotclound.xls";
             //paths = "D:\\testdata\\gitami\\amisrobotxt\\amisrobotxt\\amisrobot\\excel\\amirobotclound.xls";
-            paths =canonicalPath+"\\amisrobot\\excel\\amirobotjr.xls";
+            paths =canonicalPath+"\\amisrobot\\excel\\"+fileName;
             //paths =canonicalPath+"\\amisrobot\\excel\\amirobotclound.xls";
             System.out.println("当前在excel1:"+mySystems+" 系统操作");
         }else if(mySystems.contains("Linux")){
@@ -53,8 +54,8 @@ public class Excel {
         String fileNames = tempFile.getName();
         System.out.println("文件后缀名称= " + fileNames);
         //获取文件名称
-        fileName = fileNames.substring(0,fileNames.lastIndexOf("."));
-        System.out.println("文件名称 = " + fileName);
+        String fileNameone = fileNames.substring(0,fileNames.lastIndexOf("."));
+        System.out.println("获取到的文件名称 = " + fileNameone);
         //根据包头进行判断文件类型
         String suffix = fileTypeJuedg.getFileType(paths);
         System.out.println("文件真实类型 = "+suffix);
