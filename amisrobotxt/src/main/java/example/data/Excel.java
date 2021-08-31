@@ -19,6 +19,7 @@ import java.util.List;
 
 public class Excel {
     public static String fileName= "";
+
     public static List<String[]> judgeExcel() throws Exception {
         String paths= null;
         //获取当前系统
@@ -52,7 +53,7 @@ public class Excel {
         String fileNames = tempFile.getName();
         System.out.println("文件后缀名称= " + fileNames);
         //获取文件名称
-        String fileName = fileNames.substring(0,fileNames.lastIndexOf("."));
+        fileName = fileNames.substring(0,fileNames.lastIndexOf("."));
         System.out.println("文件名称 = " + fileName);
         //根据包头进行判断文件类型
         String suffix = fileTypeJuedg.getFileType(paths);

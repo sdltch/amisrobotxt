@@ -1,5 +1,7 @@
 package example.action;
 
+import example.data.Excel;
+
 import java.io.*;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -54,7 +56,9 @@ public class Report {
         System.out.println("===========os.name:"+mySystem);
         if(mySystem.contains("Windows")){
             //生成html名称
-            reportFileName = "reportamirobot.html";
+            //reportFileName = "reportamirobot.html";
+            reportFileName = Excel.fileName+".html";
+            System.out.println("获取"+reportFileName);
             myreport = "\\report\\";
             //获取当前路径
             File directory = new File("");
