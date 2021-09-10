@@ -3,6 +3,7 @@ package example.start;
 
 import example.action.DataManipulation;
 import example.action.Report;
+import example.action.SendEmail;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
@@ -14,8 +15,8 @@ public class MainStart {
         String endTime = Report.getCurrentTime();
         Report.generateReport(startTime, endTime);
         //发送邮件
-//        SendEmail sendEmail = new SendEmail();
-//        sendEmail.testemail();
+        SendEmail sendEmail = new SendEmail();
+        sendEmail.testemail();
 //        while (true) {//获取当前时间
 //            String currentTime = Report.getCurrentTime();
 //            System.out.println("北京时间：" + currentTime);

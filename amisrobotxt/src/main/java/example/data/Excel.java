@@ -19,7 +19,7 @@ import java.util.List;
 
 public class Excel {
     //配置读取xls文件
-    public final static String fileName= "amirobotjr.xls";
+    public final static String fileName= "amirobotclound.xls";
 
     public static List<String[]> judgeExcel() throws Exception {
         String paths= null;

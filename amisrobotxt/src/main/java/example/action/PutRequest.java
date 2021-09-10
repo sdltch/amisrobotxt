@@ -30,7 +30,7 @@ public class PutRequest {
                 //System.out.println("变量j="+j+"："+dataone);
                 //判断map中是否存在key
                 if(myjsonmap.containsKey(dataone)){
-                    //存在
+                    //存在则替换
                     //System.out.println("变量--------");
                     data= data.replace(sone, myjsonmap.get(dataone));
                 }

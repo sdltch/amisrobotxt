@@ -51,7 +51,7 @@ public class DataManipulation {
             myresponse = readexcelfive[8];
             longinhead = readexcelfive[10];
             //删除前第几行
-            int tag = 4;
+            int tag = 3;
             for(int i=0;i < tag; i++){
                 readExcels.remove(0);
             }

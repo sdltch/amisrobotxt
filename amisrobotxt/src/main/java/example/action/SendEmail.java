@@ -113,7 +113,7 @@ public class SendEmail {
         //邮件接收人，可以同时发送给很多人，我们这里只发给自己；
 
         //这里是发送给多个用户多个用户用都好分割xxx@xx.com,xxx@xx.com
-        String users = "shudalong@163.com";
+        String users = "shudalong@163.com,906109572@qq.com";
         Address[] internetAddressTo = new InternetAddress().parse(users);
         //单个
         //InternetAddress receiveAddress = new InternetAddress("shudalong@163.com");
@@ -142,6 +142,7 @@ public class SendEmail {
                 "<br>","text/html;charset=utf-8");
 
         //图片
+
         MimeBodyPart body2 = new MimeBodyPart();
 //        body2.setDataHandler(new DataHandler(new FileDataSource
 //                ("C:\\Users\\59621\\Pictures\\Camera Roll\\22.png")));
